@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#FF6B35">
+  <title>Ballwin → Fort Collins Adventure!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    @keyframes confetti-fall-0 {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-80px, 300px) rotate(720deg); opacity: 0; }
+    }
+    @keyframes confetti-fall-1 {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(60px, 350px) rotate(-540deg); opacity: 0; }
+    }
+    @keyframes confetti-fall-2 {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-40px, 280px) rotate(450deg); opacity: 0; }
+    }
+    @keyframes confetti-fall-3 {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(90px, 320px) rotate(-630deg); opacity: 0; }
+    }
+    @keyframes confetti-fall-4 {
+      0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate(-60px, 340px) rotate(540deg); opacity: 0; }
+    }
+    
+    @keyframes emoji-float {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+      50% { transform: translate(-50%, -150%) scale(1.2); opacity: 1; }
+      100% { transform: translate(-50%, -200%) scale(1); opacity: 0; }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    const RoadtripTracker = () => {
+      // Load saved state from localStorage
+      const loadState = (key, defaultValue) => {
+        try {
+          const saved = localStorage.getItem(`roadtrip_${key}`);
+          return saved ? JSON.parse(saved) : defaultValue;
+        } catch {
+          return defaultValue;
+        }
+      };
+
+      const [currentDay, setCurrentDay] = useState(1);
+      const [expandedWaypoint, setExpandedWaypoint] = useState(null);
+      const [showScavengerHunt, setShowScavengerHunt] = useState(false);
+      const [showCelebration, setShowCelebration] = useState(false);
+      const [confetti, setConfetti] = useState([]);
+      const [celebrationEmoji, setCelebrationEmoji] = useState(null);
+      
+      // Trip data
+      const tripData = {
+        name: "Ballwin → Fort Collins Adventure!",
+        days: [
+          {
+            id: 1,
+            title: "Day 1: The Big Push",
+            subtitle: "St. Louis Area → Grand Island, NE",
+            distance: 580,
+            driveTime: "~8.5 hours",
+            color: "#FF6B35",
+            waypoints: [
+              {
+                id: 'd1-1',
+                time: '6:30 AM',
+                name: 'Depart Ballwin, MO',
+                type: 'start',
+                emoji: '🚗',
+                completed: false,
+                notes: 'Start with a full tank! Adventure begins!',
+                landmark: null
+              },
+              {
+                id: 'd1-2',
+                time: '~7:00 AM',
+                name: 'Missouri River Bridge',
+                type: 'landmark',
+                emoji: '🌊',
+                completed: false,
+                notes: 'Cross the mighty Missouri River!',
+                landmark: 'Lewis & Clark traveled this same river on their famous expedition. Look for barges!'
+              },
+              {
+                id: 'd1-3',
+                time: '~8:15 AM',
+                name: 'Budweiser Clydesdales Ranch',
+                type: 'landmark',
+                emoji: '🐴',
+                completed: false,
+                notes: 'I-70, Exit 111 - Look north!',
+                landmark: 'Warm Springs Ranch! Look for white fences on the north side. Over 70 giant Clydesdale horses live here!'
+              },
+              {
+                id: 'd1-4',
+                time: '9:00 AM',
+                name: 'Bio Break - Boonville',
+                type: 'stop',
+                emoji: '🚻',
+                completed: false,
+                notes: 'Exit 101 - Quick 15 min stop. Love\'s or Casey\'s.',
+                landmark: 'Historic town on the Santa Fe Trail! Named after Daniel Boone\'s family.'
+              },
+              {
+                id: 'd1-5',
+                time: '11:30 AM',
+                name: 'Lunch - St. Joseph, MO',
+                type: 'meal',
+                emoji: '🍔',
+                completed: false,
+                notes: 'MANDATORY FUEL STOP! Exit 44/47',
+                landmark: 'Pony Express starting point! Mail riders began their 10-day journey to California here. Look for the Giant Ice Cream Cone Building!',
+                options: ['Cheddar\'s Scratch Kitchen', 'Betty\'s Cafe', 'Bartlett Park playground', 'Hyde Park splash pad']
+              },
+              {
+                id: 'd1-6',
+                time: '~1:30 PM',
+                name: 'Holy Family Shrine',
+                type: 'landmark',
+                emoji: '⛪',
+                completed: false,
+                notes: 'I-80, Exit 432 - Look for glass walls!',
+                landmark: 'Beautiful chapel with walls made almost entirely of glass!'
+              },
+              {
+                id: 'd1-7',
+                time: '3:00 PM',
+                name: 'Play Break - Mahoney Park',
+                type: 'play',
+                emoji: '🛝',
+                completed: false,
+                notes: 'Exit 409 on I-80. 30-45 min energy burn!',
+                landmark: 'Great playground just off the highway - perfect for burning energy!'
+              },
+              {
+                id: 'd1-8',
+                time: '~3:15 PM',
+                name: 'Nebraska State Capitol',
+                type: 'landmark',
+                emoji: '🏛️',
+                completed: false,
+                notes: 'Look south from I-80 near Lincoln!',
+                landmark: 'One of the tallest capitol buildings in the US! The tower rises above the city.'
+              },
+              {
+                id: 'd1-9',
+                time: '~4:30 PM',
+                name: 'Wind Turbines!',
+                type: 'landmark',
+                emoji: '🌬️',
+                completed: false,
+                notes: 'I-80, Mile 305-315',
+                landmark: 'Giant wind turbines across the plains! At night, their red lights look like "aliens landing!"'
+              },
+              {
+                id: 'd1-10',
+                time: '5:30 PM',
+                name: 'GRAND ISLAND!',
+                type: 'destination',
+                emoji: '🏨',
+                completed: false,
+                notes: 'Exit 312 - SpringHill Suites!',
+                landmark: 'You made Day 1! Indoor pool awaits! Don\'t forget to refuel tonight.',
+                options: ['Chicken Coop Sports Bar', 'Tommy\'s Family Restaurant', 'Island Oasis Water Park nearby']
+              }
+            ]
+          },
+          {
+            id: 2,
+            title: "Day 2: The Scenic Sprint",
+            subtitle: "Grand Island, NE → Fort Collins, CO",
+            distance: 320,
+            driveTime: "~5 hours",
+            color: "#4ECDC4",
+            waypoints: [
+              {
+                id: 'd2-1',
+                time: '8:00 AM',
+                name: 'Depart Grand Island',
+                type: 'start',
+                emoji: '☀️',
+                completed: false,
+                notes: 'Enjoy hotel breakfast first! Tank should be full.',
+                landmark: null
+              },
+              {
+                id: 'd2-2',
+                time: '~8:20 AM',
+                name: 'THE ARCHWAY!',
+                type: 'landmark',
+                emoji: '🌉',
+                completed: false,
+                notes: 'Exit 272/275 - YOU CAN\'T MISS THIS!',
+                landmark: 'A HUGE building spanning OVER the entire interstate! 300+ feet long, tells the story of Oregon Trail pioneers!'
+              },
+              {
+                id: 'd2-3',
+                time: '~9:00 AM',
+                name: 'Platte River Valley',
+                type: 'landmark',
+                emoji: '🦅',
+                completed: false,
+                notes: 'Mile 175-190 - Oregon Trail territory!',
+                landmark: 'Same path as the pioneers! The Platte River was called "a mile wide and an inch deep." In spring, 1 MILLION sandhill cranes visit!'
+              },
+              {
+                id: 'd2-4',
+                time: '10:00 AM',
+                name: 'Break - Ogallala',
+                type: 'stop',
+                emoji: '🤠',
+                completed: false,
+                notes: 'Exit 126 - MANDATORY STOP',
+                landmark: 'Cowboy Capital! End of the Texas Trail where cowboys drove cattle. Lake McConaughy nearby has white sand beaches!',
+                options: ['Lake Ogallala Visitor Center', 'Fat Dogs Travel Center', 'Boot Hill Cemetery']
+              },
+              {
+                id: 'd2-5',
+                time: '~10:45 AM',
+                name: 'WELCOME TO COLORADO!',
+                type: 'landmark',
+                emoji: '🎉',
+                completed: false,
+                notes: 'I-76 at NE/CO Border',
+                landmark: 'Look for the Colorado state sign! TIME ZONE CHANGE: Set clocks BACK 1 hour to Mountain Time!'
+              },
+              {
+                id: 'd2-6',
+                time: '11:30 AM (MT)',
+                name: 'Lunch - Sterling, CO',
+                type: 'meal',
+                emoji: '⛽',
+                completed: false,
+                notes: 'CRITICAL FUEL STOP! Services end after here.',
+                landmark: 'Look for the Living Trees - chainsaw sculptures carved into tree trunks!',
+                options: ['Columbine Park', 'Overland Trail Museum', 'Local fast food']
+              },
+              {
+                id: 'd2-7',
+                time: '~12:00 PM',
+                name: 'Pawnee National Grassland',
+                type: 'landmark',
+                emoji: '🦌',
+                completed: false,
+                notes: 'CO-14 West - No services for 90 miles!',
+                landmark: '193,000 acres of prairie! Look for pronghorn antelope, prairie dogs, coyotes, and hawks. This is what pioneers saw!'
+              },
+              {
+                id: 'd2-8',
+                time: '~1:00 PM',
+                name: 'ROCKY MOUNTAINS!',
+                type: 'landmark',
+                emoji: '🏔️',
+                completed: false,
+                notes: 'Near Ault - Look west!',
+                landmark: 'FIRST VIEWS! After miles of flat prairie, snow-capped peaks rise on the horizon! SO EXCITING!'
+              },
+              {
+                id: 'd2-9',
+                time: '1:30 PM',
+                name: 'FORT COLLINS!',
+                type: 'destination',
+                emoji: '🏆',
+                completed: false,
+                notes: 'YOU MADE IT!',
+                landmark: 'Old Town inspired Disneyland\'s Main Street USA! Look for painted pianos around town and the 100-year-old trolley!',
+                options: ['Old Town Square', 'Explore Main Street', 'Rocky Mountains!']
+              }
+            ]
+          }
+        ]
+      };
+
+      // Scavenger hunt items
+      const [scavengerItems, setScavengerItems] = useState(() => 
+        loadState('scavenger', [
+          { id: 1, name: 'A train', emoji: '🚂', found: false, hint: 'Nebraska has LOTS of trains!' },
+          { id: 2, name: 'A wind turbine', emoji: '🌬️', found: false, hint: 'Look for them on the plains!' },
+          { id: 3, name: 'The Kearney Archway', emoji: '🌉', found: false, hint: 'Spans OVER the highway!' },
+          { id: 4, name: 'A painted barn ad', emoji: '🏚️', found: false, hint: 'Mail Pouch or other old ads' },
+          { id: 5, name: 'A pronghorn antelope', emoji: '🦌', found: false, hint: 'Tan with white sides' },
+          { id: 6, name: 'Prairie dogs', emoji: '🐿️', found: false, hint: 'Standing up near burrows' },
+          { id: 7, name: 'A hawk on a fence post', emoji: '🦅', found: false, hint: 'They perch and watch!' },
+          { id: 8, name: 'Colorado welcome sign', emoji: '📍', found: false, hint: 'At the state border!' },
+          { id: 9, name: 'Rocky Mountains view', emoji: '🏔️', found: false, hint: 'Near the end of Day 2!' },
+        ])
+      );
+
+      // License plate tracker
+      const [spottedPlates, setSpottedPlates] = useState(() => loadState('plates', []));
+      const [showPlateModal, setShowPlateModal] = useState(false);
+      const [plateSearch, setPlateSearch] = useState('');
+      
+      const allStates = [
+        'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 
+        'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 
+        'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 
+        'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 
+        'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 
+        'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 
+        'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 
+        'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 
+        'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 
+        'West Virginia', 'Wisconsin', 'Wyoming', 'Washington D.C.'
+      ];
+
+      const stateAbbreviations = {
+        'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 
+        'California': 'CA', 'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE',
+        'Florida': 'FL', 'Georgia': 'GA', 'Hawaii': 'HI', 'Idaho': 'ID',
+        'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA', 'Kansas': 'KS',
+        'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+        'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+        'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV',
+        'New Hampshire': 'NH', 'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY',
+        'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK',
+        'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+        'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT',
+        'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV',
+        'Wisconsin': 'WI', 'Wyoming': 'WY', 'Washington D.C.': 'DC'
+      };
+
+      // State for waypoints - with localStorage persistence
+      const [dayWaypoints, setDayWaypoints] = useState(() => {
+        const saved = loadState('waypoints', null);
+        if (saved) return saved;
+        
+        const initial = {};
+        tripData.days.forEach(day => {
+          initial[day.id] = day.waypoints.map(w => ({ ...w }));
+        });
+        return initial;
+      });
+
+      // Save to localStorage whenever state changes
+      useEffect(() => {
+        localStorage.setItem('roadtrip_waypoints', JSON.stringify(dayWaypoints));
+      }, [dayWaypoints]);
+
+      useEffect(() => {
+        localStorage.setItem('roadtrip_scavenger', JSON.stringify(scavengerItems));
+      }, [scavengerItems]);
+
+      useEffect(() => {
+        localStorage.setItem('roadtrip_plates', JSON.stringify(spottedPlates));
+      }, [spottedPlates]);
+
+      // Confetti colors
+      const confettiColors = ['#FF6B35', '#4ECDC4', '#FFD93D', '#FF69B4', '#9B59B6', '#3498DB', '#2ECC71', '#E74C3C'];
+      const celebrationEmojis = ['🎉', '⭐', '🌟', '✨', '🎊', '🏆', '👏', '🙌', '🚀', '💫'];
+
+      // Create confetti burst
+      const triggerConfetti = (x, y) => {
+        const particles = [];
+        const particleCount = 30;
+        
+        for (let i = 0; i < particleCount; i++) {
+          const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5);
+          const velocity = 8 + Math.random() * 8;
+          const size = 8 + Math.random() * 8;
+          
+          particles.push({
+            id: Date.now() + i,
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity - 5,
+            color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            size: size,
+            rotation: Math.random() * 360,
+            shape: Math.random() > 0.5 ? 'circle' : 'square'
+          });
+        }
+        
+        setConfetti(particles);
+        setTimeout(() => setConfetti([]), 1500);
+      };
+
+      // Show floating emoji
+      const triggerEmojiCelebration = (x, y) => {
+        const emoji = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
+        setCelebrationEmoji({ emoji, x, y, id: Date.now() });
+        setTimeout(() => setCelebrationEmoji(null), 1000);
+      };
+
+      // Calculate progress
+      const calculateDayProgress = useCallback((dayId) => {
+        const waypoints = dayWaypoints[dayId] || [];
+        const completed = waypoints.filter(w => w.completed).length;
+        return Math.round((completed / waypoints.length) * 100);
+      }, [dayWaypoints]);
+
+      const calculateTotalProgress = useCallback(() => {
+        const allWaypoints = Object.values(dayWaypoints).flat();
+        const completed = allWaypoints.filter(w => w.completed).length;
+        return Math.round((completed / allWaypoints.length) * 100);
+      }, [dayWaypoints]);
+
+      // Toggle waypoint
+      const toggleWaypoint = (dayId, waypointId, event) => {
+        const waypoint = dayWaypoints[dayId].find(w => w.id === waypointId);
+        const willComplete = !waypoint.completed;
+        
+        setDayWaypoints(prev => ({
+          ...prev,
+          [dayId]: prev[dayId].map(w => 
+            w.id === waypointId ? { ...w, completed: !w.completed } : w
+          )
+        }));
+
+        if (willComplete && event) {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const x = rect.left + rect.width / 2;
+          const y = rect.top + rect.height / 2;
+          
+          triggerConfetti(x, y);
+          triggerEmojiCelebration(x, y);
+          
+          if (navigator.vibrate) {
+            navigator.vibrate(50);
+          }
+        }
+      };
+
+      // Toggle scavenger item
+      const toggleScavengerItem = (itemId) => {
+        setScavengerItems(prev => 
+          prev.map(item => 
+            item.id === itemId ? { ...item, found: !item.found } : item
+          )
+        );
+      };
+
+      // License plate functions
+      const addPlate = (state) => {
+        if (!spottedPlates.includes(state)) {
+          const newPlates = [...spottedPlates, state].sort();
+          setSpottedPlates(newPlates);
+          if ([10, 25, 50].includes(newPlates.length)) {
+            triggerConfetti(window.innerWidth / 2, window.innerHeight / 2);
+          }
+        }
+        setShowPlateModal(false);
+        setPlateSearch('');
+      };
+
+      const removePlate = (state) => {
+        setSpottedPlates(prev => prev.filter(s => s !== state));
+      };
+
+      const filteredStates = allStates.filter(state => 
+        state.toLowerCase().includes(plateSearch.toLowerCase()) ||
+        stateAbbreviations[state].toLowerCase().includes(plateSearch.toLowerCase())
+      );
+
+      // Check for trip completion celebration
+      useEffect(() => {
+        if (calculateTotalProgress() === 100 && !showCelebration) {
+          setShowCelebration(true);
+        }
+      }, [calculateTotalProgress, showCelebration]);
+
+      const currentDayData = tripData.days.find(d => d.id === currentDay);
+      const currentWaypoints = dayWaypoints[currentDay] || [];
+      const dayProgress = calculateDayProgress(currentDay);
+      const totalProgress = calculateTotalProgress();
+      const plateProgress = Math.min(100, Math.round((spottedPlates.length / 10) * 100));
+      const plateGoalMet = spottedPlates.length >= 10;
+
+      const getTypeStyle = (type) => {
+        const styles = {
+          start: { bg: '#E8F5E9', border: '#4CAF50' },
+          landmark: { bg: '#FFF3E0', border: '#FF9800' },
+          stop: { bg: '#E3F2FD', border: '#2196F3' },
+          meal: { bg: '#FCE4EC', border: '#E91E63' },
+          play: { bg: '#F3E5F5', border: '#9C27B0' },
+          destination: { bg: '#E0F7FA', border: '#00BCD4' }
+        };
+        return styles[type] || styles.landmark;
+      };
+
+      const getMilestoneMessage = (progress) => {
+        if (progress === 0) return "Ready to roll! 🚗";
+        if (progress < 25) return "Adventure begins! 🌟";
+        if (progress < 50) return "Making great progress! 💪";
+        if (progress < 75) return "More than halfway! 🚀";
+        if (progress < 100) return "Almost there! 🎯";
+        return "YOU MADE IT! 🏆";
+      };
+
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${currentDayData.color}22 0%, ${currentDayData.color}44 100%)`,
+          paddingBottom: '100px'
+        }}>
+          {/* Header */}
+          <div style={{
+            background: `linear-gradient(135deg, ${currentDayData.color} 0%, ${currentDayData.color}dd 100%)`,
+            padding: '20px',
+            paddingTop: '40px',
+            borderRadius: '0 0 32px 32px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+          }}>
+            <h1 style={{
+              color: 'white',
+              fontSize: '20px',
+              fontWeight: '800',
+              textAlign: 'center',
+              margin: '0 0 4px 0',
+              textShadow: '1px 1px 2px rgba(0,0,0,0.2)'
+            }}>
+              {tripData.name}
+            </h1>
+            <p style={{
+              color: 'rgba(255,255,255,0.9)',
+              textAlign: 'center',
+              margin: '0 0 16px 0',
+              fontSize: '14px'
+            }}>
+              {getMilestoneMessage(totalProgress)}
+            </p>
+
+            {/* Day Tabs */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+              {tripData.days.map(day => (
+                <button
+                  key={day.id}
+                  onClick={() => setCurrentDay(day.id)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 8px',
+                    background: currentDay === day.id ? 'white' : 'rgba(255,255,255,0.2)',
+                    border: 'none',
+                    borderRadius: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: currentDay === day.id ? currentDayData.color : 'white',
+                    marginBottom: '2px'
+                  }}>
+                    Day {day.id}
+                  </div>
+                  <div style={{
+                    fontSize: '10px',
+                    color: currentDay === day.id ? '#666' : 'rgba(255,255,255,0.8)'
+                  }}>
+                    {day.distance} mi
+                  </div>
+                </button>
+              ))}
+              <button
+                onClick={() => setShowScavengerHunt(true)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '2px dashed rgba(255,255,255,0.5)',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ fontSize: '18px' }}>🔍</div>
+                <div style={{ fontSize: '10px', color: 'white', fontWeight: '600' }}>Hunt</div>
+              </button>
+            </div>
+
+            {/* Progress Section */}
+            <div style={{
+              background: 'white',
+              borderRadius: '16px',
+              padding: '16px',
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '8px'
+              }}>
+                <span style={{ fontWeight: '700', color: '#333', fontSize: '14px' }}>
+                  {currentDayData.title}
+                </span>
+                <span style={{ fontWeight: '800', color: currentDayData.color, fontSize: '18px' }}>
+                  {dayProgress}%
+                </span>
+              </div>
+              <div style={{
+                background: '#e0e0e0',
+                borderRadius: '20px',
+                height: '20px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  background: `linear-gradient(90deg, ${currentDayData.color} 0%, ${currentDayData.color}cc 100%)`,
+                  height: '100%',
+                  width: `${dayProgress}%`,
+                  borderRadius: '20px',
+                  transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  paddingRight: '4px'
+                }}>
+                  {dayProgress > 8 && <span style={{ fontSize: '14px' }}>🚗</span>}
+                </div>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '8px',
+                fontSize: '11px',
+                color: '#888'
+              }}>
+                <span>{currentDayData.subtitle}</span>
+                <span>{currentDayData.driveTime}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Waypoints List */}
+          <div style={{ padding: '16px' }}>
+            <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 12px 8px' }}>
+              📍 Waypoints & Landmarks
+            </h2>
+
+            {currentWaypoints.map((waypoint, index) => {
+              const typeStyle = getTypeStyle(waypoint.type);
+              const isExpanded = expandedWaypoint === waypoint.id;
+              
+              return (
+                <div key={waypoint.id} style={{ marginBottom: '8px' }}>
+                  <button
+                    onClick={(e) => toggleWaypoint(currentDay, waypoint.id, e)}
+                    style={{
+                      width: '100%',
+                      background: waypoint.completed 
+                        ? 'linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%)'
+                        : typeStyle.bg,
+                      border: `2px solid ${waypoint.completed ? '#4CAF50' : typeStyle.border}`,
+                      borderRadius: '16px',
+                      padding: '14px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s ease',
+                      transform: waypoint.completed ? 'scale(0.98)' : 'scale(1)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <div style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: waypoint.completed ? '#4CAF50' : 'white',
+                        border: `2px solid ${waypoint.completed ? '#4CAF50' : typeStyle.border}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        flexShrink: 0,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: waypoint.completed ? 'scale(1.1)' : 'scale(1)',
+                        animation: waypoint.completed ? 'pulse-glow 0.6s ease-out' : 'none'
+                      }}>
+                        <span style={{
+                          transition: 'transform 0.3s ease',
+                          transform: waypoint.completed ? 'scale(1.2)' : 'scale(1)',
+                          color: waypoint.completed ? 'white' : 'inherit'
+                        }}>
+                          {waypoint.completed ? '✓' : waypoint.emoji}
+                        </span>
+                      </div>
+                      
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          gap: '8px'
+                        }}>
+                          <span style={{
+                            fontWeight: '700',
+                            fontSize: '15px',
+                            color: waypoint.completed ? '#2E7D32' : '#333',
+                            textDecoration: waypoint.completed ? 'line-through' : 'none'
+                          }}>
+                            {waypoint.name}
+                          </span>
+                          <span style={{
+                            fontSize: '11px',
+                            color: '#888',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {waypoint.time}
+                          </span>
+                        </div>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#666' }}>
+                          {waypoint.notes}
+                        </p>
+                        
+                        {(waypoint.landmark || waypoint.options) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedWaypoint(isExpanded ? null : waypoint.id);
+                            }}
+                            style={{
+                              marginTop: '8px',
+                              padding: '6px 12px',
+                              background: 'rgba(0,0,0,0.05)',
+                              border: 'none',
+                              borderRadius: '20px',
+                              fontSize: '11px',
+                              color: '#666',
+                              cursor: 'pointer',
+                              fontWeight: '600'
+                            }}
+                          >
+                            {isExpanded ? '▲ Less info' : '▼ More info'}
+                          </button>
+                        )}
+                      </div>
+                      
+                      {waypoint.completed && <span style={{ fontSize: '20px' }}>🎉</span>}
+                    </div>
+                  </button>
+                  
+                  {isExpanded && (
+                    <div style={{
+                      marginTop: '-8px',
+                      marginLeft: '20px',
+                      marginRight: '20px',
+                      padding: '16px',
+                      paddingTop: '24px',
+                      background: 'white',
+                      borderRadius: '0 0 16px 16px',
+                      border: `2px solid ${typeStyle.border}`,
+                      borderTop: 'none',
+                      fontSize: '13px',
+                      color: '#555',
+                      lineHeight: '1.5'
+                    }}>
+                      {waypoint.landmark && (
+                        <div style={{ marginBottom: '12px' }}>
+                          <strong style={{ color: '#333' }}>🔭 Look for:</strong>
+                          <p style={{ margin: '4px 0 0 0' }}>{waypoint.landmark}</p>
+                        </div>
+                      )}
+                      {waypoint.options && (
+                        <div>
+                          <strong style={{ color: '#333' }}>📋 Options:</strong>
+                          <ul style={{ margin: '4px 0 0 0', paddingLeft: '20px', listStyle: 'none' }}>
+                            {waypoint.options.map((opt, i) => (
+                              <li key={i} style={{ marginBottom: '2px' }}>• {opt}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {index < currentWaypoints.length - 1 && (
+                    <div style={{
+                      width: '2px',
+                      height: '8px',
+                      background: waypoint.completed ? '#4CAF50' : '#ddd',
+                      marginLeft: '32px',
+                      transition: 'background 0.3s ease'
+                    }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total Progress Footer */}
+          <div style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'white',
+            padding: '12px 20px',
+            boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+            borderRadius: '24px 24px 0 0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '12px', color: '#888', marginBottom: '4px' }}>
+                  Total Trip Progress
+                </div>
+                <div style={{
+                  background: '#e0e0e0',
+                  borderRadius: '10px',
+                  height: '8px',
+                  overflow: 'hidden'
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(90deg, #FF6B35 0%, #4ECDC4 100%)',
+                    height: '100%',
+                    width: `${totalProgress}%`,
+                    borderRadius: '10px',
+                    transition: 'width 0.5s ease'
+                  }} />
+                </div>
+              </div>
+              <div style={{
+                fontSize: '24px',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #FF6B35 0%, #4ECDC4 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>
+                {totalProgress}%
+              </div>
+            </div>
+          </div>
+
+          {/* Scavenger Hunt Modal */}
+          {showScavengerHunt && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                zIndex: 1000
+              }}
+              onClick={() => setShowScavengerHunt(false)}
+            >
+              <div 
+                style={{
+                  background: 'white',
+                  borderRadius: '24px',
+                  padding: '24px',
+                  maxWidth: '400px',
+                  width: '100%',
+                  maxHeight: '85vh',
+                  overflow: 'auto'
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <h2 style={{ margin: 0, fontSize: '20px' }}>🔍 Scavenger Hunt!</h2>
+                  <button
+                    onClick={() => setShowScavengerHunt(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '24px',
+                      cursor: 'pointer',
+                      color: '#888'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {scavengerItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => toggleScavengerItem(item.id)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      marginBottom: '8px',
+                      background: item.found ? '#E8F5E9' : '#f8f8f8',
+                      border: item.found ? '2px solid #4CAF50' : '2px solid #eee',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <span style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: item.found ? '#4CAF50' : '#eee',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      color: item.found ? 'white' : 'inherit'
+                    }}>
+                      {item.found ? '✓' : item.emoji}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: '600',
+                        color: item.found ? '#2E7D32' : '#333',
+                        textDecoration: item.found ? 'line-through' : 'none'
+                      }}>
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#888' }}>
+                        {item.hint}
+                      </div>
+                    </div>
+                    {item.found && <span>🎉</span>}
+                  </button>
+                ))}
+
+                {/* License Plate Tracker */}
+                <div style={{
+                  marginTop: '16px',
+                  marginBottom: '8px',
+                  padding: '16px',
+                  background: plateGoalMet 
+                    ? 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)'
+                    : 'linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%)',
+                  border: plateGoalMet ? '2px solid #4CAF50' : '2px solid #FFB300',
+                  borderRadius: '16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <span style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: plateGoalMet ? '#4CAF50' : '#FFB300',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      color: 'white'
+                    }}>
+                      {plateGoalMet ? '✓' : '🚗'}
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: '700',
+                        color: plateGoalMet ? '#2E7D32' : '#333',
+                        fontSize: '15px'
+                      }}>
+                        License Plate Challenge!
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        Goal: Spot 10+ different states
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '20px',
+                      fontWeight: '800',
+                      color: plateGoalMet ? '#2E7D32' : '#FF6B35'
+                    }}>
+                      {spottedPlates.length}/10
+                    </div>
+                  </div>
+
+                  <div style={{
+                    background: 'rgba(255,255,255,0.8)',
+                    borderRadius: '10px',
+                    height: '12px',
+                    overflow: 'hidden',
+                    marginBottom: '12px'
+                  }}>
+                    <div style={{
+                      background: plateGoalMet 
+                        ? 'linear-gradient(90deg, #4CAF50 0%, #8BC34A 100%)'
+                        : 'linear-gradient(90deg, #FF6B35 0%, #FFB300 100%)',
+                      height: '100%',
+                      width: `${plateProgress}%`,
+                      borderRadius: '10px',
+                      transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                    }} />
+                  </div>
+
+                  <button
+                    onClick={() => setShowPlateModal(true)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: 'white',
+                      border: '2px dashed #ccc',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#666',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <span style={{ fontSize: '18px' }}>➕</span>
+                    Spot a License Plate!
+                  </button>
+
+                  {spottedPlates.length > 0 && (
+                    <div style={{
+                      marginTop: '12px',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '6px'
+                    }}>
+                      {spottedPlates.map(state => (
+                        <span
+                          key={state}
+                          onClick={() => removePlate(state)}
+                          style={{
+                            padding: '4px 10px',
+                            background: 'white',
+                            border: '1px solid #ddd',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            color: '#333',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          title="Tap to remove"
+                        >
+                          {stateAbbreviations[state]}
+                          <span style={{ color: '#999', fontSize: '10px' }}>×</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {plateGoalMet && (
+                    <div style={{
+                      marginTop: '12px',
+                      textAlign: 'center',
+                      color: '#2E7D32',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>
+                      🎉 Challenge Complete! Keep going! 🎉
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => setShowScavengerHunt(false)}
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    marginTop: '12px',
+                    background: '#333',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* License Plate Modal */}
+          {showPlateModal && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                zIndex: 1100
+              }}
+              onClick={() => { setShowPlateModal(false); setPlateSearch(''); }}
+            >
+              <div 
+                style={{
+                  background: 'white',
+                  borderRadius: '24px',
+                  padding: '20px',
+                  maxWidth: '360px',
+                  width: '100%',
+                  maxHeight: '70vh',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', textAlign: 'center' }}>
+                  🚗 What state did you spot?
+                </h3>
+
+                <input
+                  type="text"
+                  value={plateSearch}
+                  onChange={(e) => setPlateSearch(e.target.value)}
+                  placeholder="Search states..."
+                  autoFocus
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '2px solid #e0e0e0',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    marginBottom: '12px',
+                    boxSizing: 'border-box'
+                  }}
+                />
+
+                <div style={{ flex: 1, overflow: 'auto', marginBottom: '12px' }}>
+                  {filteredStates.map(state => {
+                    const isSpotted = spottedPlates.includes(state);
+                    return (
+                      <button
+                        key={state}
+                        onClick={() => !isSpotted && addPlate(state)}
+                        disabled={isSpotted}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          marginBottom: '6px',
+                          background: isSpotted ? '#E8F5E9' : '#f8f8f8',
+                          border: isSpotted ? '2px solid #4CAF50' : '2px solid transparent',
+                          borderRadius: '10px',
+                          cursor: isSpotted ? 'default' : 'pointer',
+                          textAlign: 'left',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          opacity: isSpotted ? 0.7 : 1
+                        }}
+                      >
+                        <span style={{ fontWeight: '600', color: isSpotted ? '#2E7D32' : '#333' }}>
+                          {state}
+                        </span>
+                        <span style={{
+                          fontSize: '12px',
+                          color: isSpotted ? '#4CAF50' : '#888',
+                          fontWeight: '700'
+                        }}>
+                          {isSpotted ? '✓ Spotted!' : stateAbbreviations[state]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => { setShowPlateModal(false); setPlateSearch(''); }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: '#eee',
+                    color: '#666',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Celebration Modal */}
+          {showCelebration && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                zIndex: 1200
+              }}
+              onClick={() => setShowCelebration(false)}
+            >
+              <div style={{
+                background: 'linear-gradient(135deg, #FFD93D 0%, #FF6B35 50%, #4ECDC4 100%)',
+                borderRadius: '32px',
+                padding: '40px',
+                textAlign: 'center',
+                maxWidth: '320px'
+              }}>
+                <div style={{ fontSize: '72px', marginBottom: '16px' }}>🎉🏆🎉</div>
+                <h2 style={{
+                  color: 'white',
+                  fontSize: '28px',
+                  margin: '0 0 8px 0',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.2)'
+                }}>
+                  AMAZING!
+                </h2>
+                <p style={{ color: 'white', fontSize: '18px', margin: '0 0 8px 0' }}>
+                  You completed the entire road trip!
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', margin: 0 }}>
+                  🏔️ Welcome to Fort Collins! 🏔️
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', marginTop: '20px' }}>
+                  Tap anywhere to dismiss
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Confetti Layer */}
+          {confetti.length > 0 && (
+            <div style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              pointerEvents: 'none',
+              zIndex: 2000,
+              overflow: 'hidden'
+            }}>
+              {confetti.map((particle, index) => (
+                <div
+                  key={particle.id}
+                  style={{
+                    position: 'absolute',
+                    left: particle.x,
+                    top: particle.y,
+                    width: particle.size,
+                    height: particle.shape === 'circle' ? particle.size : particle.size * 0.6,
+                    backgroundColor: particle.color,
+                    borderRadius: particle.shape === 'circle' ? '50%' : '2px',
+                    transform: `rotate(${particle.rotation}deg)`,
+                    animation: `confetti-fall-${index % 5} 1.5s ease-out forwards`,
+                    opacity: 0.9
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Floating Emoji */}
+          {celebrationEmoji && (
+            <div
+              key={celebrationEmoji.id}
+              style={{
+                position: 'fixed',
+                left: celebrationEmoji.x,
+                top: celebrationEmoji.y,
+                fontSize: '48px',
+                pointerEvents: 'none',
+                zIndex: 2001,
+                animation: 'emoji-float 1s ease-out forwards',
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              {celebrationEmoji.emoji}
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<RoadtripTracker />);
+  </script>
+</body>
+</html>

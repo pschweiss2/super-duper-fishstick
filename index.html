@@ -327,6 +327,10 @@
       const [showPlateModal, setShowPlateModal] = useState(false);
       const [plateSearch, setPlateSearch] = useState('');
       
+      // Truck color tracker
+      const [spottedTrucks, setSpottedTrucks] = useState(() => loadState('trucks', {}));
+      const [showTruckModal, setShowTruckModal] = useState(false);
+      
       const allStates = [
         'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 
         'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 
@@ -380,6 +384,10 @@
       useEffect(() => {
         localStorage.setItem('roadtrip_plates', JSON.stringify(spottedPlates));
       }, [spottedPlates]);
+
+      useEffect(() => {
+        localStorage.setItem('roadtrip_trucks', JSON.stringify(spottedTrucks));
+      }, [spottedTrucks]);
 
       // Confetti colors
       const confettiColors = ['#FF6B35', '#4ECDC4', '#FFD93D', '#FF69B4', '#9B59B6', '#3498DB', '#2ECC71', '#E74C3C'];
@@ -482,6 +490,34 @@
 
       const removePlate = (state) => {
         setSpottedPlates(prev => prev.filter(s => s !== state));
+      };
+
+      // Truck color functions
+      const truckColors = [
+        { name: 'White', color: '#FFFFFF', emoji: '⚪' },
+        { name: 'Red', color: '#FF0000', emoji: '🔴' },
+        { name: 'Blue', color: '#0066CC', emoji: '🔵' },
+        { name: 'Green', color: '#00AA00', emoji: '🟢' },
+        { name: 'Yellow', color: '#FFD700', emoji: '🟡' },
+        { name: 'Orange', color: '#FF8C00', emoji: '🟠' },
+        { name: 'Brown', color: '#8B4513', emoji: '🟤' },
+        { name: 'Gray', color: '#808080', emoji: '⚫' },
+        { name: 'Silver', color: '#C0C0C0', emoji: '🔘' },
+        { name: 'Black', color: '#000000', emoji: '⚫' },
+        { name: 'Purple', color: '#800080', emoji: '🟣' },
+        { name: 'Pink', color: '#FFC0CB', emoji: '🩷' }
+      ];
+
+      const addTruck = (colorName) => {
+        setSpottedTrucks(prev => ({
+          ...prev,
+          [colorName]: (prev[colorName] || 0) + 1
+        }));
+        setShowTruckModal(false);
+      };
+
+      const getTotalTrucks = () => {
+        return Object.values(spottedTrucks).reduce((sum, count) => sum + count, 0);
       };
 
       const filteredStates = allStates.filter(state => 
@@ -1091,6 +1127,141 @@
                   )}
                 </div>
 
+                {/* Truck Color Tracker */}
+                <div style={{
+                  marginTop: '16px',
+                  marginBottom: '8px',
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%)',
+                  border: '2px solid #2196F3',
+                  borderRadius: '16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    marginBottom: '12px'
+                  }}>
+                    <span style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      background: '#2196F3',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      color: 'white'
+                    }}>
+                      🚚
+                    </span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: '700',
+                        color: '#1565C0',
+                        fontSize: '15px'
+                      }}>
+                        Truck Color Tracker!
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>
+                        Track all the truck colors you see
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '20px',
+                      fontWeight: '800',
+                      color: '#1565C0'
+                    }}>
+                      {getTotalTrucks()}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowTruckModal(true)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      background: 'white',
+                      border: '2px dashed #2196F3',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#1565C0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginBottom: '12px'
+                    }}
+                  >
+                    <span style={{ fontSize: '18px' }}>➕</span>
+                    Spot a Truck Color!
+                  </button>
+
+                  {Object.keys(spottedTrucks).length > 0 && (
+                    <div style={{
+                      marginTop: '12px',
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      gap: '8px'
+                    }}>
+                      {Object.entries(spottedTrucks).map(([colorName, count]) => {
+                        const colorData = truckColors.find(c => c.name === colorName);
+                        return (
+                          <div
+                            key={colorName}
+                            style={{
+                              padding: '6px 12px',
+                              background: 'white',
+                              border: '2px solid #ddd',
+                              borderRadius: '20px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              color: '#333',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            <div style={{
+                              width: '16px',
+                              height: '16px',
+                              borderRadius: '50%',
+                              backgroundColor: colorData?.color || '#999',
+                              border: colorName === 'White' ? '1px solid #ddd' : 'none',
+                              flexShrink: 0
+                            }} />
+                            <span>{colorName}</span>
+                            <span style={{
+                              background: '#E3F2FD',
+                              color: '#1565C0',
+                              padding: '2px 6px',
+                              borderRadius: '10px',
+                              fontSize: '11px',
+                              fontWeight: '700'
+                            }}>
+                              {count}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {getTotalTrucks() >= 20 && (
+                    <div style={{
+                      marginTop: '12px',
+                      textAlign: 'center',
+                      color: '#1565C0',
+                      fontWeight: '700',
+                      fontSize: '14px'
+                    }}>
+                      🚚 Truck Spotting Pro! Keep it up! 🚚
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setShowScavengerHunt(false)}
                   style={{
@@ -1203,6 +1374,109 @@
 
                 <button
                   onClick={() => { setShowPlateModal(false); setPlateSearch(''); }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: '#eee',
+                    color: '#666',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Truck Color Modal */}
+          {showTruckModal && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+                zIndex: 1100
+              }}
+              onClick={() => setShowTruckModal(false)}
+            >
+              <div 
+                style={{
+                  background: 'white',
+                  borderRadius: '24px',
+                  padding: '20px',
+                  maxWidth: '360px',
+                  width: '100%',
+                  maxHeight: '70vh',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+                onClick={e => e.stopPropagation()}
+              >
+                <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', textAlign: 'center' }}>
+                  🚚 What color truck did you spot?
+                </h3>
+
+                <div style={{ flex: 1, overflow: 'auto', marginBottom: '12px' }}>
+                  {truckColors.map(truckColor => (
+                    <button
+                      key={truckColor.name}
+                      onClick={() => addTruck(truckColor.name)}
+                      style={{
+                        width: '100%',
+                        padding: '12px 16px',
+                        marginBottom: '8px',
+                        background: '#f8f8f8',
+                        border: '2px solid transparent',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                      }}
+                    >
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: truckColor.color,
+                        border: truckColor.name === 'White' ? '1px solid #ddd' : 'none',
+                        flexShrink: 0
+                      }} />
+                      <span style={{ fontWeight: '600', color: '#333', flex: 1 }}>
+                        {truckColor.name}
+                      </span>
+                      <span style={{ fontSize: '18px' }}>
+                        {truckColor.emoji}
+                      </span>
+                      {spottedTrucks[truckColor.name] && (
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#4CAF50',
+                          fontWeight: '700',
+                          background: '#E8F5E9',
+                          padding: '2px 8px',
+                          borderRadius: '12px'
+                        }}>
+                          {spottedTrucks[truckColor.name]} spotted
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setShowTruckModal(false)}
                   style={{
                     width: '100%',
                     padding: '12px',
